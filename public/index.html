@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rota Rehberi</title>
+<script src="/config.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d1b24;--panel:#13242f;--ink:#eaf2f4;--mut:#8aa3ad;--line:#25404d;--route:#38d0ff;--ok:#3ddc84;--mid:#ffb02e;--bad:#ff4d4d;--map:#0a151c;--grid:#12252f;--old:#3b5360;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#eef3f5;--panel:#fff;--ink:#10242d;--mut:#5b7480;--line:#cfdde3;--route:#0a8fc2;--ok:#1fa85a;--mid:#e08a00;--bad:#d93030;--map:#e3ecef;--grid:#d3e0e5;--old:#aebfc7}}
+:root[data-theme="light"]{--bg:#eef3f5;--panel:#fff;--ink:#10242d;--mut:#5b7480;--line:#cfdde3;--route:#0a8fc2;--ok:#1fa85a;--mid:#e08a00;--bad:#d93030;--map:#e3ecef;--grid:#d3e0e5;--old:#aebfc7}
+*{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font:500 15px/1.3 "Barlow Semi Condensed",system-ui,sans-serif}
+#app{position:relative;height:100%;max-width:520px;margin:auto;overflow:hidden;background:var(--map)}
+#cv{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+#man{position:absolute;top:8px;left:8px;right:8px;display:flex;gap:12px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 14px}
+#ico{flex:none;width:56px;height:56px;border-radius:12px;background:var(--bg);display:grid;place-items:center;font-size:30px}
+#dist{font-size:34px;font-weight:700;line-height:1}#txt{font-size:19px;font-weight:700}#then{color:var(--mut);font-size:14px}
+#alert{position:absolute;top:104px;left:8px;right:8px;background:var(--mid);color:#1b1200;border-radius:10px;padding:8px 12px;font-weight:700}
+#alert[hidden]{display:none}
+#mb{position:absolute;right:8px;top:50%;display:grid;gap:6px;transform:translateY(-75%)}#mb button{min-height:42px;padding:0 8px;font-size:14px}#attr{color:var(--mut);font-size:10px;margin-top:4px}
+button,select{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:12px;min-height:44px;min-width:44px;padding:0 12px;cursor:pointer}
+button:focus-visible,select:focus-visible{outline:3px solid var(--route);outline-offset:2px}
+button[aria-pressed=true]{border-color:var(--route);color:var(--route)}
+#sheet{position:absolute;left:0;right:0;bottom:0;background:var(--panel);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:12px 14px calc(12px + env(safe-area-inset-bottom,0px))}
+#stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center}
+#stats b{display:block;font-size:26px;line-height:1.1}#stats span{color:var(--mut);font-size:13px}
+#sc{width:100%;height:30px;display:block;margin-top:8px}
+#tinfo{display:flex;justify-content:space-between;color:var(--mut);font-size:13px;margin-top:2px}
+#stops{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0}
+#stops div{border:1px solid var(--line);border-radius:10px;padding:5px 8px;font-size:13px;color:var(--mut)}#stops b{color:var(--ink);display:block;font-size:15px}
+#stops .past{opacity:.5}
+#ctl{display:flex;gap:6px;align-items:center}#play{flex:1;background:var(--route);color:#04141b;border:0;font-weight:700;font-size:17px}
+#heard{min-height:18px;color:var(--mut);font-size:13px;margin-top:6px}
+@media (prefers-reduced-motion:no-preference){#alert{animation:in .25s}@keyframes in{from{opacity:0;transform:translateY(-6px)}}}
+#man{background:#0b6b57;color:#fff;border:0;box-shadow:0 4px 14px rgba(0,0,0,.3)}#man #then{color:#cdeee5}#man #ico{background:rgba(255,255,255,.15)}
+#sheet{margin:0 8px 8px;border:0;border-radius:22px;box-shadow:0 -2px 18px rgba(0,0,0,.28)}
+#mb button{border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.3);font-size:13px;border:0}
+#play{background:#1a73e8;color:#fff;border-radius:24px}#eta{color:#0b8a5a}
+#pick{position:absolute;inset:0;z-index:5;background:var(--bg);padding:14px;overflow:auto}#pick[hidden]{display:none}
+.ph{display:flex;justify-content:space-between;align-items:center;font-size:22px;font-weight:700;margin-bottom:10px}
+#q{width:100%;min-height:48px;border-radius:24px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:inherit;font-size:17px;padding:0 18px}
+#pick h3{margin:16px 2px 4px;color:var(--mut);font-size:14px;text-transform:uppercase;letter-spacing:.05em}
+.card{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:6px 0;cursor:pointer}
+.card span,.mut{color:var(--mut);font-size:13px}.card button{min-height:36px;font-size:13px}
+</style></head><body>
+<div id="app">
+<canvas id="cv" aria-label="Rota haritası"></canvas>
+<div id="man" aria-live="polite"><div id="ico"></div><div><div id="dist">—</div><div id="txt">Hazır</div><div id="then"></div></div></div>
+<div id="alert" hidden role="status"></div>
+<div id="mb"><button id="rt" aria-label="Rotalar">Rotalar</button><button id="zi" aria-label="Yakınlaştır">+</button><button id="zo" aria-label="Uzaklaştır">−</button><button id="ov" aria-label="Genel görünüm" aria-pressed="false">Rota</button><button id="loc" aria-label="Konumum">◎</button><button id="lay" aria-label="Harita katmanı">Uydu</button><button id="trf" aria-label="Canlı trafik" aria-pressed="false">Trafik</button></div>
+<div id="pick" hidden><div class="ph"><span>Rotalar</span><button id="px" aria-label="Kapat">✕</button></div><input id="q" type="search" placeholder="Nereye gidiyorsun? (adres, yer)" autocomplete="off"><div id="res"></div><div id="alts"></div><h3>Kayıtlı rotalar</h3><div id="saved"></div></div>
+<section id="sheet">
+<div id="stats"><div><b id="eta">--:--</b><span>varış</span></div><div><b id="rem">--</b><span>kalan süre</span></div><div><b id="km">--</b><span>kalan km</span></div><div><b id="spd">0</b><span>km/sa</span></div></div>
+<canvas id="sc"></canvas><div id="tinfo"><span id="tnow"></span><span id="tsrc">kayıttaki hıza göre trafik</span></div>
+<div id="stops"></div>
+<div id="ctl"><button id="play">Başlat</button><button id="mic" aria-pressed="false" aria-label="Sesli komut">Mikrofon</button><button id="snd" aria-pressed="true" aria-label="Sesli yönlendirme">Ses</button><select id="mult" hidden aria-label="Oynatma hızı"><option value="1">1×</option><option value="5">5×</option><option value="20" selected>20×</option><option value="60">60×</option></select><button id="demo" aria-label="Demo oynatma">Demo</button></div>
+<div id="heard">Komutlar: rotalar, başlat, dur, sonraki dönüş, kalan süre, trafik, durak, sessiz</div><div id="attr">© OpenStreetMap katkıcıları · © CARTO · Uydu: Esri · Trafik: TomTom</div>
+</section></div>
+<script>
+const D={"p":[[40.96476,28.64349,0,0,1],[40.96499,28.64265,75,18,1],[40.96492,28.64112,205,55,1],[40.9652,28.64057,262,72,1],[40.96657,28.63966,432,111,1],[40.96691,28.63957,470,119,1],[40.96721,28.63967,505,130,1],[40.96758,28.63937,554,143,1],[40.96971,28.63852,801,201,1],[40.9713,28.6383,980,251,1],[40.97394,28.6387,1277,308,0],[40.97438,28.63861,1327,317,1],[40.97517,28.63786,1436,335,1],[40.97585,28.63793,1512,349,1],[40.97732,28.63774,1677,392,0],[40.97913,28.63815,1881,415,0],[40.98037,28.63809,2020,436,0],[40.97997,28.64076,2252,581,1],[40.97935,28.64205,2382,623,0],[40.9824,28.64315,2735,679,1],[40.98318,28.64369,2834,692,0],[40.98448,28.64546,3042,739,0],[40.98463,28.64761,3223,758,0],[40.98488,28.64887,3334,772,1],[40.98502,28.6491,3359,776,1],[40.98556,28.64915,3421,793,1],[40.98589,28.64882,3467,798,1],[40.98609,28.64831,3516,804,1],[40.98864,28.64737,3812,867,1],[40.99239,28.64768,4230,948,1],[40.99385,28.64758,4393,993,1],[40.99647,28.64766,4684,1045,1],[40.99679,28.64733,4734,1060,1],[40.99793,28.64848,4894,1099,1],[40.99833,28.64763,4981,1118,2],[40.99863,28.64873,5081,1141,1],[41.00164,28.65201,5514,1260,1],[41.00154,28.65227,5541,1267,1],[41.00015,28.65394,5751,1313,1],[41.00023,28.654,5761,1316,1],[41.0006,28.6536,5814,1337,1],[41.0008,28.65361,5837,1349,1],[41.005,28.65642,6361,1433,1],[41.00517,28.65639,6381,1439,1],[41.00562,28.65544,6477,1461,1],[41.00736,28.65655,6692,1513,1],[41.00751,28.65635,6716,1520,1],[41.00915,28.652,7125,1666,0],[41.00832,28.6511,7248,1687,0],[41.00871,28.64936,7401,1763,1],[41.00906,28.64346,7898,1845,0],[41.00925,28.64343,7921,1850,0],[41.01208,28.64436,8245,1897,1],[41.01228,28.64427,8269,1905,1],[41.01269,28.64334,8360,1917,1],[41.01293,28.64326,8388,1921,0],[41.0149,28.64458,8634,1941,0],[41.0151,28.6449,8670,1945,0],[41.01507,28.64511,8688,1947,0],[41.01494,28.64524,8706,1949,0],[41.01459,28.64517,8746,1953,0],[41.01445,28.64492,8773,1958,0],[41.01449,28.64459,8801,1963,0],[41.01848,28.63401,9794,2017,2],[41.01965,28.63114,10070,2076,0],[41.02026,28.63001,10186,2086,0],[41.02134,28.62876,10346,2097,0],[41.02201,28.62771,10461,2106,0],[41.02232,28.62757,10499,2110,0],[41.02248,28.62764,10518,2112,0],[41.0227,28.62803,10560,2116,0],[41.02263,28.62842,10593,2119,0],[41.02248,28.6286,10616,2121,0],[41.02174,28.62877,10700,2128,0],[41.02017,28.62843,10878,2145,0],[41.019,28.62788,11016,2178,0],[41.01696,28.6264,11276,2208,0],[41.01687,28.62415,11466,2235,1],[41.01678,28.62423,11479,2240,1],[41.01672,28.62591,11620,2267,1],[41.01638,28.62625,11670,2276,0],[41.01412,28.6258,11925,2428,0],[40.99909,28.62573,13596,2721,1],[40.99777,28.62569,13743,2743,1],[40.99757,28.62558,13768,2747,1],[40.99746,28.62531,13794,2752,1],[40.99749,28.62499,13821,2758,1],[40.99901,28.62164,14150,2819,1],[40.999,28.6215,14162,2823,1],[40.99822,28.62117,14253,2836,0],[40.99742,28.62038,14364,2850,1],[40.99641,28.61878,14539,2880,1],[40.99644,28.61865,14551,2884,1],[40.99771,28.61812,14699,2907,0],[40.99933,28.61796,14880,2931,0],[41.00002,28.61807,14958,2944,1],[41.0013,28.61858,15106,2968,1],[41.00146,28.61848,15129,2974,0],[41.00119,28.61613,15328,3003,0],[41.0007,28.61411,15507,3032,0],[41.00042,28.61319,15590,3045,0],[40.99962,28.61171,15743,3070,0],[40.99904,28.60971,15923,3096,0],[40.99816,28.60878,16050,3114,0],[40.99805,28.60652,16241,3140,0],[40.99754,28.60499,16382,3265,1],[40.99911,28.60319,16612,3298,0],[40.99961,28.60284,16676,3304,0],[41.00396,28.60174,17169,3346,0],[41.00527,28.60174,17314,3358,0],[41.00665,28.60206,17471,3373,0],[41.00908,28.60212,17742,3424,1],[41.01045,28.60139,17906,3446,0],[41.01144,28.60056,18036,3464,0],[41.01248,28.60033,18155,3484,1],[41.01426,28.59843,18410,3541,1],[41.01473,28.59886,18474,3554,1],[41.01566,28.59907,18578,3576,0],[41.01733,28.596,18897,3629,0],[41.01737,28.59387,19076,3658,1],[41.01749,28.5935,19110,3669,1],[41.01818,28.59338,19188,3682,1],[41.01916,28.59395,19308,3707,1],[41.01934,28.59388,19331,3717,1],[41.02015,28.59125,19570,3757,0],[41.02123,28.58891,19801,3791,1],[41.0212,28.58868,19823,3797,1],[41.01959,28.58741,20032,3846,1],[41.01999,28.58594,20164,3880,1],[41.01899,28.58564,20280,3905,1],[41.01891,28.58534,20307,3910,1],[41.01891,28.5849,20343,3916,1],[41.01918,28.58435,20398,3924,1],[41.02053,28.58251,20614,3963,1],[41.02075,28.58247,20640,3970,2],[41.02199,28.58399,20829,4226,2],[41.022,28.58424,20852,4232,1],[41.02072,28.58609,21064,4282,1],[41.019,28.58574,21257,4326,1],[41.0189,28.58723,21384,4360,1],[41.01746,28.59075,21721,4440,1],[41.01734,28.59311,21920,4485,1],[41.01605,28.59478,22122,4533,1],[41.01422,28.5984,22488,4612,1],[41.01259,28.60025,22727,4660,1],[41.01221,28.60046,22774,4675,1],[41.01115,28.60056,22892,4704,1],[41.01056,28.6013,22984,4716,0],[41.00906,28.60211,23164,4733,0],[41.00762,28.6021,23325,4760,0],[41.00527,28.60165,23589,4810,0],[41.00408,28.60164,23721,4832,0],[40.99977,28.60273,24210,4873,0],[40.99912,28.60311,24290,4879,0],[40.99751,28.60497,24528,4988,1],[40.99795,28.60654,24671,5013,2],[40.99805,28.60867,24851,5079,1],[40.99914,28.61019,25028,5115,1],[40.99957,28.61172,25166,5141,0],[41.00041,28.6134,25335,5155,1],[41.00103,28.61556,25529,5201,0],[41.00135,28.61805,25741,5219,0],[41.00124,28.61835,25770,5223,0],[41.00102,28.61836,25794,5227,0],[40.99969,28.61779,25950,5251,0],[40.99767,28.61809,26177,5287,1],[40.99639,28.61863,26327,5300,1],[40.99638,28.61885,26348,5311,0],[40.99736,28.62039,26518,5330,0],[40.99807,28.62113,26618,5337,0],[40.999,28.62162,26731,5356,0],[40.99732,28.6254,27100,5409,0],[40.99696,28.62552,27142,5415,2],[40.99657,28.62524,27193,5423,2],[40.99652,28.62551,27217,5459,2],[40.99662,28.6258,27245,5465,0],[41.015,28.62611,29291,5861,0],[41.01716,28.62685,29539,5879,0],[41.0191,28.62827,29786,5911,1],[41.01953,28.62877,29849,5918,0],[41.01975,28.62931,29901,5923,0],[41.01967,28.63009,29969,5930,1],[41.0191,28.63122,30083,5942,0],[41.01395,28.645,31374,6090,0],[41.01345,28.64601,31476,6100,0],[41.01333,28.64605,31488,6103,1],[41.01265,28.64552,31576,6129,1],[41.01223,28.64431,31690,6146,1],[41.0091,28.64336,32048,6209,0],[41.00874,28.64923,32544,6341,0],[41.00824,28.65143,32739,6371,1],[41.00864,28.65159,32786,6381,0],[41.01068,28.65327,33054,6423,0],[41.00918,28.65742,33441,6485,2],[41.00891,28.65759,33477,6491,2],[41.00812,28.6571,33575,6716,2]],"t":[[505,-50],[1422,37],[2020,101],[2382,-105],[3348,-47],[3448,-32],[3516,58],[4734,82],[4981,122],[5514,85],[5751,-163],[6371,-75],[6477,72],[6692,-82],[7125,-71],[7248,66],[7898,85],[8257,-61],[8360,57],[8688,76],[10499,50],[11276,52],[11466,-154],[11644,46],[13779,55],[14162,-96],[14551,92],[15118,-96],[15923,-35],[16050,37],[16382,69],[18410,72],[18578,-58],[19110,57],[19318,-83],[19813,-79],[20032,82],[20164,-94],[20280,61],[20628,68],[20840,75],[21064,51],[21257,-90],[22892,-43],[24540,-59],[24851,-34],[25770,77],[25950,-34],[26338,-94],[26731,94],[27204,-118],[31488,72],[31576,40],[31690,-46],[32048,-83],[32739,-92],[33054,76],[33466,59]],"s":[[41.01412,28.6258,11925,2],[41.02113,28.58293,20698,3],[41.00862,28.65742,33512,3]],"L":33575,"T":6716,"ref":44};
+const $=id=>document.getElementById(id);let P,L,TT,M,lat0,lon0,kx,ky,XY,PD,PT,S,MP,B;
+const xy=(la,lo)=>[(lo-lon0)*kx,-(la-lat0)*ky];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),lerp=(a,b,f)=>a+(b-a)*f;
+function idx(A,v){let lo=0,hi=A.length-1;while(hi-lo>1){const m=(lo+hi)>>1;A[m]<=v?lo=m:hi=m}return lo}
+const fr=(A,i,v)=>clamp((v-A[i])/((A[i+1]-A[i])||1),0,1);
+function at(d){d=clamp(d,0,L);const i=idx(PD,d),f=fr(PD,i,d);return{x:lerp(XY[i][0],XY[i+1][0],f),y:lerp(XY[i][1],XY[i+1][1],f),i}}
+const tOf=d=>{const i=idx(PD,d);return lerp(PT[i],PT[i+1],fr(PD,i,d))},dOf=t=>{const i=idx(PT,t);return lerp(PD[i],PD[i+1],fr(PT,i,t))};
+const bear=d=>{const a=at(d-8),b=at(d+25);return(Math.atan2(b.x-a.x,-(b.y-a.y))*180/Math.PI+360)%360};
+const st={d:0,t:0,run:false,live:false,voice:true,z:16,ov:false,follow:true,gp:null,gh:0,acc:0,onr:true,off:0,rt:0,layer:"map",prov:0,trf:0,first:0,last:null,cx:0,cy:0,spd:0,hd:0,started:false};
+const said={};let C={};
+const readC=()=>{const s=getComputedStyle(document.documentElement);['bg','panel','ink','mut','route','ok','mid','bad','map','grid','old'].forEach(k=>C[k]=s.getPropertyValue('--'+k).trim())};
+readC();matchMedia('(prefers-color-scheme:light)').addEventListener('change',()=>setTimeout(readC,50));
+const TC=l=>[C.ok,C.mid,C.bad][l],TN=['Akıcı','Orta yoğunluk','Yoğun'];
+const fD=m=>m<1000?(m<100?Math.round(m/5)*5:Math.round(m/10)*10)+' m':(m/1000).toFixed(1).replace('.',',')+' km';
+const fT=s=>{s=Math.round(s/60);return s>=60?Math.floor(s/60)+' sa '+(s%60)+' dk':Math.max(s,1)+' dk'};
+const clk=sec=>new Date(Date.now()+sec*1000).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});
+const cap=s=>s[0].toUpperCase()+s.slice(1);
+function tx(a){const d=a>0?'sağa':'sola',x=Math.abs(a);return x>=150?'U dönüşü yapın':x>=110?'Keskin '+d+' dönün':x>=60?cap(d)+' dönün':'Hafifçe '+d+' dönün'}
+const mtx=m=>m.end?'Varış noktasına ulaşacaksınız':tx(m.a);
+// ses
+let voice=null;const pick=()=>{voice=(speechSynthesis.getVoices().find(v=>v.lang&&v.lang.toLowerCase().startsWith('tr'))||null)};
+if('speechSynthesis' in window){pick();speechSynthesis.onvoiceschanged=pick}
+function say(t,force){if(!st.voice&&!force||!('speechSynthesis' in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.replace(/(\d) m\b/g,'$1 metre').replace(/(\d) km\b/g,'$1 kilometre').replace(/ sa /g,' saat ').replace(/ dk\b/g,' dakika'));u.lang='tr-TR';if(voice)u.voice=voice;speechSynthesis.speak(u)}
+let at_=0;function alertMsg(t,ms=6000){const a=$('alert');a.textContent=t;a.hidden=false;clearTimeout(at_);at_=setTimeout(()=>a.hidden=true,ms)}
+function icon(m){if(!m)return'';if(m.end)return'🏁';const r=m.a*Math.PI/180,ex=24+16*Math.sin(r),ey=22-16*Math.cos(r),u=[Math.sin(r),-Math.cos(r)],v=[Math.cos(r),Math.sin(r)];
+ const pt=(a,b)=>(ex+u[0]*a+v[0]*b).toFixed(1)+','+(ey+u[1]*a+v[1]*b).toFixed(1);
+ return `<svg viewBox="0 0 48 48" width="48" height="48"><path d="M24 44V22L${ex.toFixed(1)} ${ey.toFixed(1)}" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><polygon points="${pt(10,0)} ${pt(-1,9)} ${pt(-1,-9)}" fill="#fff"/></svg>`}
+// durum
+function update(dt){
+ if(st.run&&!st.live){st.t+=dt*(+$('mult').value);if(st.t>=TT){st.t=TT;st.run=false;$('demo').textContent='Demo';say('Varış noktasına ulaştınız.')}
+  st.d=dOf(st.t);const i=idx(PT,st.t);st.spd=lerp(st.spd,(PD[i+1]-PD[i])/((PT[i+1]-PT[i])||1)*3.6,.1)}
+ const tg=st.live?st.gh:bear(st.d),df=((tg-st.hd+540)%360)-180;st.hd=(st.hd+df*Math.min(1,dt*4)+360)%360}
+function nav(){
+ const k=M.findIndex(m=>m.d>st.d+8);if(k<0)return;const m=M[k],dist=m.d-st.d;
+ if(st.live&&!st.onr){$('dist').textContent=fD(st.off);$('txt').textContent='Rotadan uzaktasınız';$('ico').textContent='↩';$('then').textContent='Rotaya geri dönün';return}
+ $('dist').textContent=fD(dist);$('txt').textContent=mtx(m);$('ico').innerHTML=icon(m);
+ const n=M[k+1],ns=S.find(s=>s.d>st.d+10);
+ $('then').textContent=n&&!n.end&&n.d-m.d<350?'Hemen ardından: '+tx(n).toLowerCase():ns?ns.name+' · '+fD(ns.d-st.d):'';
+ if(!st.run)return;
+ const ths=[500,200,50],j=ths.findIndex((t,x)=>dist<=t&&(ths[x+1]===undefined||dist>ths[x+1]));
+ if(j>=0&&!said[k+':'+j]){for(let x=0;x<=j;x++)said[k+':'+x]=1;say(j==2?mtx(m)+' şimdi':fD(ths[j])+' sonra, '+mtx(m).toLowerCase())}
+ S.forEach((s,i)=>{const r=s.d-st.d;
+  if(r<=300&&r>30&&!said['s'+i]){said['s'+i]=1;say(s.name+', '+fD(r)+' ileride')}
+  if(r<=30&&!said['a'+i]){said['a'+i]=1;said['s'+i]=1;if(s.name!='Varış'){say(s.name+'. Durağa ulaştınız, yaklaşık '+s.min+' dakika mola.');alertMsg(s.name+' · yaklaşık '+s.min+' dk mola')}}});
+ const cur=at(st.d).i;let q=-1;for(let i=cur+1;i<P.length&&PD[i]-st.d<3000;i++)if(P[i][4]==2){q=i;break}
+ if(q>0&&!said['t'+q]){said['t'+q]=1;const t=fD(PD[q]-st.d)+' sonra yoğun trafik';alertMsg(t);say(t)}}
+function stats(){
+ const rem=TT-tOf(st.d),left=L-st.d,i=at(st.d).i;
+ $('eta').textContent=clk(rem);$('rem').textContent=fT(rem);$('km').textContent=(left/1000).toFixed(1).replace('.',',');$('spd').textContent=Math.round(st.spd);
+ $('tnow').textContent='Şu an: '+TN[P[i][4]];
+ $('stops').innerHTML=S.map(s=>{const p=s.d<=st.d+20;return `<div class="${p?'past':''}"><b>${s.name}${p?' ✓':''}</b>${p?'geçildi':fD(s.d-st.d)+' · '+clk(tOf(s.d)-tOf(st.d))}</div>`}).join('')}
+// çizim
+const cv=$('cv'),ctx=cv.getContext('2d'),sc=$('sc'),sx=sc.getContext('2d');
+function fit(c){const r=devicePixelRatio||1,w=c.clientWidth,h=c.clientHeight;if(c.width!=Math.round(w*r)||c.height!=Math.round(h*r)){c.width=Math.round(w*r);c.height=Math.round(h*r)}c.getContext('2d').setTransform(r,0,0,r,0,0);return[w,h]}
+const mer=(la,lo)=>{const q=Math.sin(la*Math.PI/180);return[(lo+180)/360,.5-Math.log((1+q)/(1-q))/(4*Math.PI)]};
+function setRoute(R){P=R.p;L=R.L;TT=R.T;M=[...R.t.map(([d,a])=>({d,a})),{d:L,end:1}];lat0=P[0][0];lon0=P[0][1];kx=Math.cos(lat0*Math.PI/180)*111320;ky=110540;
+ XY=P.map(p=>[(p[1]-lon0)*kx,-(p[0]-lat0)*ky]);PD=P.map(p=>p[2]);PT=P.map(p=>p[3]);
+ S=R.s.map((s,i)=>({d:s[2],min:s[3],name:(i==R.s.length-1&&s[2]>L-200)?'Varış':'Durak '+(i+1),p:xy(s[0],s[1]),m:mer(s[0],s[1])}));
+ MP=P.map(p=>mer(p[0],p[1]));const xs=MP.map(p=>p[0]),ys=MP.map(p=>p[1]);B=[Math.min(...xs),Math.max(...xs),Math.min(...ys),Math.max(...ys)];
+ Object.keys(said).forEach(k=>delete said[k]);Object.assign(st,{d:0,t:0,run:false,started:false,spd:0,ov:true,follow:false,cx:MP[0][0],cy:MP[0][1],hd:bear(0)});
+ $('ov').setAttribute('aria-pressed',true);$('ov').textContent='Takip';$('demo').textContent='Demo';$('tsrc').textContent=R.live?'canlı trafik · TomTom':'kayıttaki hıza göre trafik'}
+setRoute(D);
+const atM=d=>{d=clamp(d,0,L);const i=idx(PD,d),f=fr(PD,i,d);return{x:lerp(MP[i][0],MP[i+1][0],f),y:lerp(MP[i][1],MP[i+1][1],f),i}};
+const meP=()=>st.live?(st.gp||atM(st.d)):st.started?atM(st.d):st.gp;
+let tk=window.TTKEY||'';try{tk=localStorage.getItem('tt')||tk}catch(x){}
+const TCH={};let tn=0;
+let tOK=0,tER=0;
+function chk(){if(tOK||tER<6||st.layer!='map')return;
+ if(st.prov<PV(0).length-1){st.prov++;tER=0;Object.keys(TCH).forEach(k=>delete TCH[k]);alertMsg('Harita kaynağı değiştirildi',3000)}
+ else if(!said.tile){said.tile=1;alertMsg('Harita karoları yüklenemiyor. İnternet bağlantısını kontrol edin ve dosyayı Chrome/Safari ile açın',9000);setTimeout(()=>delete said.tile,30000)}}
+function tile(u){let t=TCH[u];if(!t){if(++tn>500){Object.keys(TCH).slice(0,200).forEach(k=>delete TCH[k]);tn=300}t=TCH[u]={i:new Image,ok:0};t.i.onload=()=>{t.ok=1;tOK++};t.i.onerror=()=>{tER++;setTimeout(()=>{if(TCH[u]===t)delete TCH[u]},8000);chk()};t.i.src=u}return t.ok?t.i:null}
+const PV=dk=>[...(tk?[(z,x,y)=>`https://api.tomtom.com/map/1/tile/basic/${dk?'night':'main'}/${z}/${x}/${y}.png?key=${tk}`]:[]),(z,x,y)=>`https://${'abc'[(x+y)%3]}.basemaps.cartocdn.com/${dk?'dark_all':'rastertiles/voyager'}/${z}/${x}/${y}${devicePixelRatio>1.5?'@2x':''}.png`,(z,x,y)=>`https://tile.openstreetmap.org/${z}/${x}/${y}.png`,(z,x,y)=>`https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/${z}/${y}/${x}`];
+function layer(fn,al,px,py,K,z,W,H){const zt=clamp(Math.round(z),3,19),n=2**zt,ts=K/n,R=Math.hypot(W/2,H*.7)/ts+.5,x0=Math.floor(px*n-R),x1=Math.floor(px*n+R),y0=Math.max(0,Math.floor(py*n-R)),y1=Math.min(n-1,Math.floor(py*n+R));ctx.globalAlpha=al;
+ for(let x=x0;x<=x1;x++)for(let y=y0;y<=y1;y++){const i=tile(fn(zt,((x%n)+n)%n,y));if(i)ctx.drawImage(i,(x/n-px)*K,(y/n-py)*K,ts+.6,ts+.6)}ctx.globalAlpha=1}
+function draw(){
+ const[W,H]=fit(cv),me=meP(),dk=!matchMedia('(prefers-color-scheme:light)').matches;
+ ctx.fillStyle=C.map;ctx.fillRect(0,0,W,H);let cx=W/2,cy=110+(H-380)*.65+40;
+ if(st.ov){st.z=Math.log2(Math.min((W-50)/(B[1]-B[0]),(H-390)/(B[3]-B[2]))/256);st.cx=(B[0]+B[1])/2;st.cy=(B[2]+B[3])/2;st.follow=false;cy=110+(H-380)/2}
+ else if(st.follow&&me){st.cx=lerp(st.cx,me.x,.3);st.cy=lerp(st.cy,me.y,.3)}
+ const tr=st.follow&&me&&!st.ov?-st.hd:0;st.rt+=(((tr-st.rt+540)%360+360)%360-180)*.15;
+ const rot=st.rt*Math.PI/180,z=st.z,K=256*2**z,px=st.cx,py=st.cy;
+ ctx.save();ctx.translate(cx,cy);ctx.rotate(rot);
+ layer(st.layer=='sat'?(z,x,y)=>`https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`:PV(dk)[st.prov],1,px,py,K,z,W,H);
+ if(st.trf&&tk)layer((z,x,y)=>`https://api.tomtom.com/traffic/map/4/tile/flow/relative/${z}/${x}/${y}.png?key=${tk}`,.9,px,py,K,z,W,H);
+ const X=p=>[(p[0]-px)*K,(p[1]-py)*K],cur=atM(st.d),lw=clamp(z-11,0,6)+4;ctx.lineCap=ctx.lineJoin='round';
+ ctx.beginPath();MP.forEach((p,i)=>{const q=X(p);i?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1])});ctx.lineWidth=lw+4;ctx.strokeStyle=dk?'#000':'#fff';ctx.globalAlpha=.85;ctx.stroke();ctx.globalAlpha=1;
+ for(let i=0;i<P.length-1;i++){const a=X(MP[i]),b=X(MP[i+1]);ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.lineWidth=lw;ctx.strokeStyle=PD[i+1]<=st.d?C.old:TC(P[i][4]);ctx.stroke()}
+ const nm=M.find(m=>m.d>st.d+8);
+ if(z>13)M.forEach(m=>{if(m.end)return;const p=atM(m.d),q=X([p.x,p.y]);ctx.beginPath();ctx.arc(q[0],q[1],m===nm?6:3,0,7);ctx.fillStyle=m===nm?C.ink:C.mut;ctx.strokeStyle=dk?'#000':'#fff';ctx.lineWidth=2;ctx.stroke();ctx.fill()});
+ const mk=(p,t,col)=>{const q=X(p);ctx.save();ctx.translate(q[0],q[1]);ctx.rotate(-rot);ctx.fillStyle=col;ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(-11,-11,22,22,6);ctx.fill();ctx.stroke();ctx.fillStyle='#04141b';ctx.font='700 13px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(t,0,1);ctx.restore()};
+ mk(MP[0],'A',C.ok);S.forEach((s,i)=>{if(s.name!='Varış')mk(s.m,i+1,C.mid)});mk(MP[P.length-1],'B',C.route);
+ if(me){const q=X([me.x,me.y]),mpp=156543.03*Math.cos(Math.atan(Math.sinh(Math.PI*(1-2*me.y))))/2**z;
+  if(me===st.gp&&st.acc){ctx.beginPath();ctx.arc(q[0],q[1],Math.max(st.acc/mpp,10),0,7);ctx.fillStyle='rgba(26,115,232,.16)';ctx.fill()}
+  ctx.save();ctx.translate(q[0],q[1]);ctx.strokeStyle='#fff';ctx.lineWidth=3;
+  if(st.live||st.started){ctx.rotate(st.hd*Math.PI/180);ctx.fillStyle=C.route;ctx.beginPath();ctx.moveTo(0,-15);ctx.lineTo(11,11);ctx.lineTo(0,5);ctx.lineTo(-11,11);ctx.closePath();ctx.stroke();ctx.fill()}
+  else{ctx.fillStyle='#1a73e8';ctx.beginPath();ctx.arc(0,0,8,0,7);ctx.stroke();ctx.fill()}
+  ctx.restore()}
+ ctx.restore();
+ // trafik şeridi
+ const[w,h]=fit(sc),by=14;sx.clearRect(0,0,w,h);
+ for(let i=0;i<P.length-1;i++){sx.fillStyle=TC(P[i][4]);sx.fillRect(PD[i]/L*w,by,Math.max(1,(PD[i+1]-PD[i])/L*w+.5),8)}
+ sx.fillStyle=C.panel;sx.globalAlpha=.6;sx.fillRect(0,by,st.d/L*w,8);sx.globalAlpha=1;
+ S.forEach(s=>{sx.fillStyle=C.ink;sx.fillRect(s.d/L*w-1,by-4,2,16)});
+ const vx=clamp(st.d/L*w,5,w-5);sx.fillStyle=C.route;sx.strokeStyle=C.ink;sx.lineWidth=2;sx.beginPath();sx.moveTo(vx,by-3);sx.lineTo(vx+6,by-12);sx.lineTo(vx-6,by-12);sx.closePath();sx.fill();sx.stroke()}
+let last=performance.now(),acc=0;
+(function loop(n){const dt=Math.min(.2,(n-last)/1000);last=n;update(dt);acc+=dt;if(acc>.4){acc=0;stats()}nav();draw();requestAnimationFrame(loop)})(last);
+// kontroller
+function simPlay(){if(st.live){alertMsg('Önce GPS navigasyonunu durdurun');return}
+ if(st.t>=TT){st.t=0;st.d=0;st.run=false;Object.keys(said).forEach(k=>delete said[k])}
+ st.run=!st.run;$('demo').textContent=st.run?'Demo durdur':'Demo devam';
+ if(st.run&&!st.started){st.started=true;say(`Yola çıkıyoruz. Toplam ${fD(L)}, tahmini süre ${fT(TT)}.`)}}
+$('demo').onclick=simPlay;$('play').onclick=()=>play();
+$('zi').onclick=()=>st.z=Math.min(19,st.z+1);$('zo').onclick=()=>st.z=Math.max(3,st.z-1);
+$('ov').onclick=()=>{st.ov=!st.ov;if(!st.ov)st.follow=true;$('ov').setAttribute('aria-pressed',st.ov);$('ov').textContent=st.ov?'Takip':'Rota'};
+function free(){if(st.ov){st.ov=false;$('ov').setAttribute('aria-pressed',false);$('ov').textContent='Rota'}st.follow=false}
+const ptr=new Map();let pd0=0;
+cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);ptr.set(e.pointerId,[e.clientX,e.clientY]);if(ptr.size==2){const[p,q]=[...ptr.values()];pd0=Math.hypot(p[0]-q[0],p[1]-q[1])}});
+cv.addEventListener('pointermove',e=>{const o=ptr.get(e.pointerId);if(!o)return;const n=[e.clientX,e.clientY];
+ if(ptr.size==1){free();const K=256*2**st.z,r=st.rt*Math.PI/180,dx=n[0]-o[0],dy=n[1]-o[1];st.cx-=(dx*Math.cos(r)+dy*Math.sin(r))/K;st.cy-=(-dx*Math.sin(r)+dy*Math.cos(r))/K}
+ ptr.set(e.pointerId,n);
+ if(ptr.size==2){free();const[p,q]=[...ptr.values()],d=Math.hypot(p[0]-q[0],p[1]-q[1]);if(pd0)st.z=clamp(st.z+Math.log2(d/pd0),3,19.5);pd0=d}});
+const pup=e=>{ptr.delete(e.pointerId);pd0=0};cv.addEventListener('pointerup',pup);cv.addEventListener('pointercancel',pup);
+cv.addEventListener('wheel',e=>{e.preventDefault();free();st.z=clamp(st.z-e.deltaY/400,3,19.5)},{passive:false});
+$('lay').onclick=()=>{st.layer=st.layer=='map'?'sat':'map';$('lay').textContent=st.layer=='map'?'Uydu':'Harita'};
+function setKey(){const k=prompt('TomTom API anahtarınızı girin (developer.tomtom.com → ücretsiz hesap). Harita ve canlı trafik bununla gelir:');if(!k)return;tk=k.trim();try{localStorage.setItem('tt',tk)}catch(x){}st.prov=0;tER=0;tOK=0;Object.keys(TCH).forEach(k=>delete TCH[k])}
+async function tfx(){}
+$('trf').onclick=()=>{if(!st.trf&&!tk){setKey();if(!tk)return}st.trf=!st.trf;$('trf').setAttribute('aria-pressed',st.trf);if(st.trf)tfx()};
+if(!tk)setTimeout(()=>alertMsg('Daha iyi harita ve canlı trafik için "Trafik" butonuna basıp TomTom anahtarı girin',9000),1500);
+$('snd').onclick=()=>{st.voice=!st.voice;$('snd').setAttribute('aria-pressed',st.voice);if(!st.voice&&'speechSynthesis' in window)speechSynthesis.cancel()};
+let wid=null,wl=null;
+function gerr(e){if(!isSecureContext&&location.protocol!='file:'){alertMsg('Konum için sayfa https:// ile açılmalı',8000);return}
+ alertMsg({1:'Konum izni reddedildi. Tarayıcı ayarlarından izin verin',2:'Konum bulunamadı. Cihazda konum servisini açın',3:'Konum alınamadı, tekrar deneniyor'}[e.code]||'Konum hatası',8000);
+ if(e.code==1&&st.live){st.live=false;$('play').textContent='Başlat'}}
+function snap(q,a,b){let best=1e9,bd=0;for(let i=a;i<b;i++){const p=XY[i],r=XY[i+1],vx=r[0]-p[0],vy=r[1]-p[1],l2=vx*vx+vy*vy||1,f=clamp(((q[0]-p[0])*vx+(q[1]-p[1])*vy)/l2,0,1),dd=Math.hypot(q[0]-p[0]-f*vx,q[1]-p[1]-f*vy);if(dd<best){best=dd;bd=lerp(PD[i],PD[i+1],f)}}return[best,bd]}
+function fix(p){const c=p.coords,m=mer(c.latitude,c.longitude),q=xy(c.latitude,c.longitude),pv=st.last;
+ if(st.live&&pv&&c.accuracy>150)return;
+ st.gp={x:m[0],y:m[1]};st.acc=c.accuracy;st.ll=[c.latitude,c.longitude];
+ let sp=c.speed!=null&&!isNaN(c.speed)?c.speed*3.6:null;
+ if(pv){const dm=Math.hypot(q[0]-pv.q[0],q[1]-pv.q[1]),dt=Math.max(.5,(p.timestamp-pv.t)/1000),mv=dm>Math.max(8,c.accuracy/2);
+  if(sp==null)sp=dm/dt*3.6;
+  if(c.heading!=null&&!isNaN(c.heading)&&sp>5)st.gh=c.heading;else if(mv)st.gh=(Math.atan2(q[0]-pv.q[0],-(q[1]-pv.q[1]))*180/Math.PI+360)%360;
+  if(mv)st.last={q,t:p.timestamp}}else st.last={q,t:p.timestamp};
+ if(!st.live)return;
+ st.spd=lerp(st.spd,sp||0,.5);
+ let r=st.first?snap(q,0,P.length-1):snap(q,idx(PD,Math.max(0,st.d-300)),Math.min(P.length-1,idx(PD,st.d+2500)+2));
+ if(r[0]>100&&!st.first)r=snap(q,0,P.length-1);
+ st.first=0;st.off=r[0];st.onr=r[0]<100;
+ if(st.onr){st.d=r[1];st.t=tOf(r[1]);st.run=true}else st.run=false;
+ if(!st.onr&&!said.off){said.off=1;alertMsg('Rotadan ayrıldınız');say('Rotadan çıktınız');setTimeout(()=>delete said.off,20000)}}
+function locate(){if(!navigator.geolocation)return gerr({code:2});navigator.geolocation.getCurrentPosition(p=>{fix(p);st.follow=true},gerr,{enableHighAccuracy:true,timeout:15000,maximumAge:0})}
+$('loc').onclick=()=>{st.ov=false;$('ov').textContent='Rota';$('ov').setAttribute('aria-pressed',false);st.follow=true;if(!st.live)locate()};
+const play=()=>{if(st.live){navigator.geolocation.clearWatch(wid);st.live=false;st.run=false;$('play').textContent='Başlat';try{wl&&wl.release()}catch(x){}return}
+ if(!navigator.geolocation){gerr({code:2});return}
+ st.run=false;st.live=true;st.first=1;st.follow=true;st.ov=false;$('ov').textContent='Rota';
+ wid=navigator.geolocation.watchPosition(fix,gerr,{enableHighAccuracy:true,maximumAge:0,timeout:20000});
+ try{navigator.wakeLock.request('screen').then(l=>wl=l).catch(()=>{})}catch(x){}
+ $('play').textContent='Durdur';tfx()};
+locate();
+// rotalar
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),km=m=>(m/1000).toFixed(1).replace('.',',')+' km';
+let ROUTES=[{name:'Eklenmiş rota',d:D,b:1}],ALT=[],DEST=null,RES=[];const QC={},RC={};
+try{JSON.parse(localStorage.getItem('rts')||'[]').forEach(r=>ROUTES.push(r))}catch(x){}
+const svR=()=>{try{localStorage.setItem('rts',JSON.stringify(ROUTES.filter(r=>!r.b)))}catch(x){alertMsg('Kaydedilemedi')}};
+function renderSaved(){$('saved').innerHTML=ROUTES.map((r,i)=>`<div class="card" data-i="${i}"><div><b>${esc(r.name)}</b><br><span>${km(r.d.L)} · ${fT(r.d.T)}</span></div>${r.b?'':`<button data-x="${i}" aria-label="Sil">✕</button>`}</div>`).join('')}
+const openPick=()=>{renderSaved();$('pick').hidden=false},closePick=()=>{$('pick').hidden=true};
+function openRoute(d,name){if(st.live)play();setRoute(d);closePick();alertMsg(name+' hazır · Başlat ile yönlendirmeyi başlatın',6000)}
+$('rt').onclick=openPick;$('px').onclick=closePick;
+$('saved').onclick=e=>{const x=e.target.closest('[data-x]');if(x){ROUTES.splice(+x.dataset.x,1);svR();renderSaved();return}const c=e.target.closest('[data-i]');if(c){const r=ROUTES[+c.dataset.i];openRoute(r.d,r.name)}};
+let qt=0;$('q').oninput=()=>{clearTimeout(qt);const v=$('q').value.trim();if(v.length<3){$('res').innerHTML='';return}qt=setTimeout(()=>search(v),700)};
+async function search(v){const k=v.toLowerCase();let r=QC[k];
+ if(!r){try{const ll=st.ll?`&lat=${st.ll[0].toFixed(3)}&lon=${st.ll[1].toFixed(3)}`:'',R=await fetch(`https://api.tomtom.com/search/2/search/${encodeURIComponent(v)}.json?key=${tk}&limit=5&language=tr-TR&countrySet=TR&typeahead=true${ll}`);
+  if(!R.ok){alertMsg('Arama başarısız (anahtar/kota?)');return}
+  r=QC[k]=((await R.json()).results||[]).map(x=>({n:x.poi?x.poi.name:x.address.freeformAddress,a:x.address.freeformAddress,la:x.position.lat,lo:x.position.lon}))}catch(e){alertMsg('Arama başarısız');return}}
+ RES=r;$('res').innerHTML=r.map((x,i)=>`<div class="card" data-r="${i}"><div><b>${esc(x.n)}</b><br><span>${esc(x.a)}</span></div></div>`).join('')||'<div class="mut">Sonuç yok</div>'}
+$('res').onclick=e=>{const c=e.target.closest('[data-r]');if(c){const x=RES[+c.dataset.r];$('q').value=x.n;$('res').innerHTML='';plan(x)}};
+function conv(rt,x){const pts=rt.legs.flatMap(l=>l.points),lv=new Array(pts.length).fill(0);
+ (rt.sections||[]).forEach(s=>{if(s.sectionType!='TRAFFIC')return;const m=s.magnitudeOfDelay,l=m>=3?2:m>=1?1:0;for(let i=s.startPointIndex;i<=s.endPointIndex;i++)lv[i]=Math.max(lv[i],l)});
+ const p=[];let d=0,pr=null;
+ pts.forEach((q,i)=>{if(pr){const dd=Math.hypot((q.longitude-pr.longitude)*Math.cos(q.latitude*Math.PI/180)*111320,(q.latitude-pr.latitude)*110540);
+   if(dd<20&&i<pts.length-1){p[p.length-1][4]=Math.max(p[p.length-1][4],lv[i]);return}d+=dd}
+  p.push([q.latitude,q.longitude,Math.round(d),0,lv[i]]);pr=q});
+ const T=rt.summary.travelTimeInSeconds,Ld=Math.round(d);p.forEach(a=>a[3]=Math.round(a[2]/Ld*T));
+ const t=[];((rt.guidance&&rt.guidance.instructions)||[]).forEach(n=>{const a=n.turnAngleInDecimalDegrees,o=n.routeOffsetInMeters;
+  if(typeof a!='number'||/DEPART|ARRIVE|WAYPOINT/.test(n.maneuver||''))return;if(Math.abs(a)>=25&&o>5&&o<Ld-10)t.push([o,Math.round(a)])});
+ t.sort((a,b)=>a[0]-b[0]);return{p,t,s:[[x.la,x.lo,Ld,0]],L:Ld,T,live:1}}
+async function plan(x){const o=st.ll||ROUTES[0].d.p[0].slice(0,2);if(!st.ll)alertMsg('Konum alınamadı, eklenmiş rotanın başlangıcı kullanıldı',5000);
+ const key=o.map(v=>v.toFixed(3))+'|'+x.la.toFixed(4)+','+x.lo.toFixed(4);let a=RC[key];
+ if(!a){$('alts').innerHTML='<div class="mut">Rotalar hesaplanıyor…</div>';
+  try{const R=await fetch(`https://api.tomtom.com/routing/1/calculateRoute/${o[0].toFixed(5)},${o[1].toFixed(5)}:${x.la},${x.lo}/json?key=${tk}&traffic=true&maxAlternatives=2&instructionsType=coded&sectionType=traffic&language=tr-TR&routeType=fastest&travelMode=car`);
+   if(!R.ok)throw 0;a=RC[key]=(await R.json()).routes.map(rt=>({d:conv(rt,x),dl:rt.summary.trafficDelayInSeconds||0}))}catch(e){$('alts').innerHTML='<div class="mut">Rota hesaplanamadı</div>';return}}
+ ALT=a;DEST=x;$('alts').innerHTML='<h3>Rota seçenekleri</h3>'+a.map((r,i)=>`<div class="card" data-a="${i}"><div><b>${i?'Alternatif '+i:'En hızlı'} · ${fT(r.d.T)}</b><br><span>${km(r.d.L)}${r.dl>=120?' · +'+Math.round(r.dl/60)+' dk trafik':' · trafik akıcı'}</span></div><button data-s="${i}">Kaydet</button></div>`).join('')}
+$('alts').onclick=e=>{const sv=e.target.closest('[data-s]');if(sv){const r=ALT[+sv.dataset.s];ROUTES.push({name:DEST.n,d:r.d});svR();renderSaved();sv.textContent='✓';return}const c=e.target.closest('[data-a]');if(c)openRoute(ALT[+c.dataset.a].d,DEST.n)};
+renderSaved();openPick();
+// sesli komut
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null;
+const nz=s=>s.toLocaleLowerCase('tr').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ı/g,'i');
+function cmd(raw){const r=nz(raw),k=M.find(m=>m.d>st.d+8),rem=TT-tOf(st.d),ns=S.find(s=>s.d>st.d+10);
+ const h=t=>{$('heard').textContent='“'+raw.trim()+'” → '+t};
+ if(/rotalar|rota sec/.test(r)){h('rotalar');openPick()}
+ else if(/durak/.test(r)){const t=ns?`${ns.name}, ${fD(ns.d-st.d)} ileride, tahmini ${clk(tOf(ns.d)-tOf(st.d))}`:'Önünüzde durak yok';h(t);say(t,1)}
+ else if(/baslat|basla|devam|yola cik/.test(r)){h('başlat');if(!st.live)play()}
+ else if(/\bdur\b|duraklat|bekle/.test(r)){h('durdur');if(st.live)play()}
+ else if(/sonraki|donus|talimat|nereye/.test(r)){const t=k?`${fD(k.d-st.d)} sonra, ${mtx(k).toLowerCase()}`:'Rota bitti';h(t);say(t,1)}
+ else if(/kalan sure|varis|kac dakika|ne zaman/.test(r)){const t=`Tahmini varış ${clk(rem)}, kalan süre ${fT(rem)}`;h(t);say(t,1)}
+ else if(/kalan mesafe|kac km|kilometre|mesafe/.test(r)){const t=`Kalan mesafe ${fD(L-st.d)}`;h(t);say(t,1)}
+ else if(/trafik/.test(r)){const t='Şu an trafik: '+TN[P[at(st.d).i][4]].toLowerCase();h(t);say(t,1)}
+ else if(/sessiz|sesi kapat/.test(r)){h('ses kapalı');say('Sesli yönlendirme kapalı',1);st.voice=false;$('snd').setAttribute('aria-pressed',false)}
+ else if(/sesi ac|sesli/.test(r)){st.voice=true;$('snd').setAttribute('aria-pressed',true);h('ses açık');say('Sesli yönlendirme açık')}
+ else if(/yakinlas|buyut/.test(r)){h('yakınlaştır');$('zi').click()}
+ else if(/uzaklas|kucult/.test(r)){h('uzaklaştır');$('zo').click()}
+ else if(/genel|tum rota|harita/.test(r)){h('genel görünüm');$('ov').click()}
+ else if(/hizlan|hizli/.test(r)){h('hızlı');$('mult').selectedIndex=Math.min(3,$('mult').selectedIndex+1)}
+ else if(/yavasla|yavas/.test(r)){h('yavaş');$('mult').selectedIndex=Math.max(0,$('mult').selectedIndex-1)}
+ else if(/bastan|yeniden/.test(r)){h('baştan');st.t=TT;simPlay()}
+ else h('anlaşılamadı')}
+$('mic').onclick=()=>{
+ if(!SR){alertMsg('Bu tarayıcı sesli komutu desteklemiyor (Chrome veya Safari deneyin)');return}
+ if(rec){const r=rec;rec=null;r.stop();$('mic').setAttribute('aria-pressed',false);$('heard').textContent='Mikrofon kapalı';return}
+ rec=new SR();rec.lang='tr-TR';rec.continuous=true;rec.interimResults=false;
+ rec.onresult=e=>cmd(e.results[e.results.length-1][0].transcript);
+ rec.onend=()=>{if(rec)try{rec.start()}catch(x){}};
+ rec.onerror=e=>{if(e.error=='not-allowed'||e.error=='service-not-allowed'){rec=null;$('mic').setAttribute('aria-pressed',false);alertMsg('Mikrofon izni verilmedi')}};
+ try{rec.start();$('mic').setAttribute('aria-pressed',true);$('heard').textContent='Dinliyorum…'}catch(x){}};
+</script></body></html>

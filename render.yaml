@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: rota-rehberi
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /healthz
+    envVars:
+      - key: TOMTOM_KEY
+        sync: false
