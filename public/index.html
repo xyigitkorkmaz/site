@@ -112,12 +112,12 @@ function stats(){
 const cv=$('cv'),ctx=cv.getContext('2d'),sc=$('sc'),sx=sc.getContext('2d');
 function fit(c){const r=devicePixelRatio||1,w=c.clientWidth,h=c.clientHeight;if(c.width!=Math.round(w*r)||c.height!=Math.round(h*r)){c.width=Math.round(w*r);c.height=Math.round(h*r)}c.getContext('2d').setTransform(r,0,0,r,0,0);return[w,h]}
 const mer=(la,lo)=>{const q=Math.sin(la*Math.PI/180);return[(lo+180)/360,.5-Math.log((1+q)/(1-q))/(4*Math.PI)]};
-function setRoute(R){P=R.p;L=R.L;TT=R.T;M=[...R.t.map(([d,a])=>({d,a})),{d:L,end:1}];lat0=P[0][0];lon0=P[0][1];kx=Math.cos(lat0*Math.PI/180)*111320;ky=110540;
+function setRoute(R){const fresh=R.live&&Date.now()-(R.ts||0)<6e5;P=fresh?R.p:R.p.map(p=>[p[0],p[1],p[2],p[3],0]);if(!fresh||R.stale){st.trf=1;$('trf').setAttribute('aria-pressed',true)}L=R.L;TT=R.T;M=[...R.t.map(([d,a])=>({d,a})),{d:L,end:1}];lat0=P[0][0];lon0=P[0][1];kx=Math.cos(lat0*Math.PI/180)*111320;ky=110540;
  XY=P.map(p=>[(p[1]-lon0)*kx,-(p[0]-lat0)*ky]);PD=P.map(p=>p[2]);PT=P.map(p=>p[3]);
  S=R.s.map((s,i)=>({d:s[2],min:s[3],name:(i==R.s.length-1&&s[2]>L-200)?'Varış':'Durak '+(i+1),p:xy(s[0],s[1]),m:mer(s[0],s[1])}));
  MP=P.map(p=>mer(p[0],p[1]));const xs=MP.map(p=>p[0]),ys=MP.map(p=>p[1]);B=[Math.min(...xs),Math.max(...xs),Math.min(...ys),Math.max(...ys)];
  Object.keys(said).forEach(k=>delete said[k]);Object.assign(st,{d:0,t:0,run:false,started:false,spd:0,ov:true,follow:false,cx:MP[0][0],cy:MP[0][1],hd:bear(0)});
- $('ov').setAttribute('aria-pressed',true);$('ov').textContent='Takip';$('demo').textContent='Demo';$('tsrc').textContent=R.live?'canlı trafik · TomTom':'kayıttaki hıza göre trafik'}
+ $('ov').setAttribute('aria-pressed',true);$('ov').textContent='Takip';$('demo').textContent='Demo';$('tsrc').textContent=fresh?'canlı trafik · TomTom':'trafik: haritadaki canlı katman'}
 setRoute(D);
 const atM=d=>{d=clamp(d,0,L);const i=idx(PD,d),f=fr(PD,i,d);return{x:lerp(MP[i][0],MP[i+1][0],f),y:lerp(MP[i][1],MP[i+1][1],f),i}};
 const meP=()=>st.live?(st.gp||atM(st.d)):st.started?atM(st.d):st.gp;
@@ -140,7 +140,7 @@ function draw(){
  const rot=st.rt*Math.PI/180,z=st.z,K=256*2**z,px=st.cx,py=st.cy;
  ctx.save();ctx.translate(cx,cy);ctx.rotate(rot);
  layer(st.layer=='sat'?(z,x,y)=>`https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`:PV(dk)[st.prov],1,px,py,K,z,W,H);
- if(st.trf&&tk)layer((z,x,y)=>`https://api.tomtom.com/traffic/map/4/tile/flow/relative/${z}/${x}/${y}.png?key=${tk}`,.9,px,py,K,z,W,H);
+ if(st.trf&&tk)layer((z,x,y)=>`https://api.tomtom.com/traffic/map/4/tile/flow/reduced-sensitivity/${z}/${x}/${y}.png?key=${tk}&t=${Math.floor(Date.now()/3e5)}`,.9,px,py,K,z,W,H);
  const X=p=>[(p[0]-px)*K,(p[1]-py)*K],cur=atM(st.d),lw=clamp(z-11,0,6)+4;ctx.lineCap=ctx.lineJoin='round';
  ctx.beginPath();MP.forEach((p,i)=>{const q=X(p);i?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1])});ctx.lineWidth=lw+4;ctx.strokeStyle=dk?'#000':'#fff';ctx.globalAlpha=.85;ctx.stroke();ctx.globalAlpha=1;
  for(let i=0;i<P.length-1;i++){const a=X(MP[i]),b=X(MP[i+1]);ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.lineWidth=lw;ctx.strokeStyle=PD[i+1]<=st.d?C.old:TC(P[i][4]);ctx.stroke()}
@@ -222,7 +222,17 @@ try{JSON.parse(localStorage.getItem('rts')||'[]').forEach(r=>ROUTES.push(r))}cat
 const svR=()=>{try{localStorage.setItem('rts',JSON.stringify(ROUTES.filter(r=>!r.b)))}catch(x){alertMsg('Kaydedilemedi')}};
 function renderSaved(){$('saved').innerHTML=ROUTES.map((r,i)=>`<div class="card" data-i="${i}"><div><b>${esc(r.name)}</b><br><span>${km(r.d.L)} · ${fT(r.d.T)}</span></div>${r.b?'':`<button data-x="${i}" aria-label="Sil">✕</button>`}</div>`).join('')}
 const openPick=()=>{renderSaved();$('pick').hidden=false},closePick=()=>{$('pick').hidden=true};
-function openRoute(d,name){if(st.live)play();setRoute(d);closePick();alertMsg(name+' hazır · Başlat ile yönlendirmeyi başlatın',6000)}
+function join(a,b){const o=a.L;return{p:[...a.p.slice(0,-1),...b.p.map(q=>[q[0],q[1],q[2]+o,q[3]+a.T,q[4]])],t:[...a.t,...b.t.map(([d,n])=>[d+o,n])],s:b.s.map(x=>[x[0],x[1],x[2]+o,x[3]]),L:o+b.L,T:a.T+b.T,live:1,ts:Date.now(),stale:b.stale}}
+async function openRoute(d,name){if(st.live)play();closePick();
+ const fresh=d.live&&Date.now()-(d.ts||0)<6e5;let m=fresh?d:{...d,p:d.p.map(q=>[q[0],q[1],q[2],q[3],0]),live:0,stale:1},msg=name+' hazır · Başlat ile yönlendirmeyi başlatın';
+ const A=d.p[0];
+ if(st.ll){const dd=Math.hypot((st.ll[1]-A[1])*Math.cos(A[0]*Math.PI/180)*111320,(st.ll[0]-A[0])*110540);
+  if(dd>300){alertMsg('Konumdan rota başlangıcına yol hesaplanıyor…',4000);
+   try{const k='ap'+st.ll.map(v=>v.toFixed(3))+A[0].toFixed(4)+A[1].toFixed(4);let ap=RC[k];
+    if(!ap){const R=await fetch(`https://api.tomtom.com/routing/1/calculateRoute/${st.ll[0].toFixed(5)},${st.ll[1].toFixed(5)}:${A[0]},${A[1]}/json?key=${tk}&traffic=true&maxAlternatives=0&instructionsType=coded&sectionType=traffic&language=tr-TR&routeType=fastest&travelMode=car`);if(!R.ok)throw 0;ap=RC[k]=conv((await R.json()).routes[0],{la:A[0],lo:A[1]})}
+    m=join(ap,m);msg=name+': konumdan başlangıca '+km(ap.L)+' yaklaşma yolu eklendi · Başlat ile başlayın'}catch(e){msg=name+': başlangıca yol hesaplanamadı, sadece rota açıldı'}}}
+ else msg=name+' hazır (konum alınamadı, başlangıca yol eklenmedi)';
+ setRoute(m);alertMsg(msg,7000)}
 $('rt').onclick=openPick;$('px').onclick=closePick;
 $('saved').onclick=e=>{const x=e.target.closest('[data-x]');if(x){ROUTES.splice(+x.dataset.x,1);svR();renderSaved();return}const c=e.target.closest('[data-i]');if(c){const r=ROUTES[+c.dataset.i];openRoute(r.d,r.name)}};
 let qt=0;$('q').oninput=()=>{clearTimeout(qt);const v=$('q').value.trim();if(v.length<3){$('res').innerHTML='';return}qt=setTimeout(()=>search(v),700)};
@@ -233,7 +243,7 @@ async function search(v){const k=v.toLowerCase();let r=QC[k];
  RES=r;$('res').innerHTML=r.map((x,i)=>`<div class="card" data-r="${i}"><div><b>${esc(x.n)}</b><br><span>${esc(x.a)}</span></div></div>`).join('')||'<div class="mut">Sonuç yok</div>'}
 $('res').onclick=e=>{const c=e.target.closest('[data-r]');if(c){const x=RES[+c.dataset.r];$('q').value=x.n;$('res').innerHTML='';plan(x)}};
 function conv(rt,x){const pts=rt.legs.flatMap(l=>l.points),lv=new Array(pts.length).fill(0);
- (rt.sections||[]).forEach(s=>{if(s.sectionType!='TRAFFIC')return;const m=s.magnitudeOfDelay,l=m>=3?2:m>=1?1:0;for(let i=s.startPointIndex;i<=s.endPointIndex;i++)lv[i]=Math.max(lv[i],l)});
+ (rt.sections||[]).forEach(s=>{if(s.sectionType!='TRAFFIC')return;const m=s.magnitudeOfDelay,dl=s.delayInSeconds||0,l=(m>=4||(m==3&&dl>=120))?2:(m>=1&&dl>=45)?1:0;for(let i=s.startPointIndex;i<=s.endPointIndex;i++)lv[i]=Math.max(lv[i],l)});
  const p=[];let d=0,pr=null;
  pts.forEach((q,i)=>{if(pr){const dd=Math.hypot((q.longitude-pr.longitude)*Math.cos(q.latitude*Math.PI/180)*111320,(q.latitude-pr.latitude)*110540);
    if(dd<20&&i<pts.length-1){p[p.length-1][4]=Math.max(p[p.length-1][4],lv[i]);return}d+=dd}
@@ -241,7 +251,7 @@ function conv(rt,x){const pts=rt.legs.flatMap(l=>l.points),lv=new Array(pts.leng
  const T=rt.summary.travelTimeInSeconds,Ld=Math.round(d);p.forEach(a=>a[3]=Math.round(a[2]/Ld*T));
  const t=[];((rt.guidance&&rt.guidance.instructions)||[]).forEach(n=>{const a=n.turnAngleInDecimalDegrees,o=n.routeOffsetInMeters;
   if(typeof a!='number'||/DEPART|ARRIVE|WAYPOINT/.test(n.maneuver||''))return;if(Math.abs(a)>=25&&o>5&&o<Ld-10)t.push([o,Math.round(a)])});
- t.sort((a,b)=>a[0]-b[0]);return{p,t,s:[[x.la,x.lo,Ld,0]],L:Ld,T,live:1}}
+ t.sort((a,b)=>a[0]-b[0]);return{p,t,s:[[x.la,x.lo,Ld,0]],L:Ld,T,live:1,ts:Date.now()}}
 async function plan(x){const o=st.ll||ROUTES[0].d.p[0].slice(0,2);if(!st.ll)alertMsg('Konum alınamadı, eklenmiş rotanın başlangıcı kullanıldı',5000);
  const key=o.map(v=>v.toFixed(3))+'|'+x.la.toFixed(4)+','+x.lo.toFixed(4);let a=RC[key];
  if(!a){$('alts').innerHTML='<div class="mut">Rotalar hesaplanıyor…</div>';
