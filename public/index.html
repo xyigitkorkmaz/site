@@ -37,18 +37,26 @@ button[aria-pressed=true]{border-color:var(--route);color:var(--route)}
 #play{background:#1a73e8;color:#fff;border-radius:24px}#eta{color:#0b8a5a}
 #pick{position:absolute;inset:0;z-index:5;background:var(--bg);padding:14px;overflow:auto}#pick[hidden]{display:none}
 .ph{display:flex;justify-content:space-between;align-items:center;font-size:22px;font-weight:700;margin-bottom:10px}
-#q{width:100%;min-height:48px;border-radius:24px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:inherit;font-size:17px;padding:0 18px}
+#q0,#q{margin-top:6px;width:100%;min-height:48px;border-radius:24px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:inherit;font-size:17px;padding:0 18px}
 #pick h3{margin:16px 2px 4px;color:var(--mut);font-size:14px;text-transform:uppercase;letter-spacing:.05em}
 .card{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:6px 0;cursor:pointer}
 .card span,.mut{color:var(--mut);font-size:13px}.card button{min-height:36px;font-size:13px}
+#mb{top:auto;transform:none;right:8px;bottom:calc(var(--sh,300px) + 8px);grid-auto-flow:column;grid-template-rows:repeat(4,40px);gap:6px;z-index:2}
+#mb button{min-height:40px;min-width:46px;padding:0 10px}
+#hd{display:block;width:100%;height:22px;background:none;border:0;margin:-8px 0 0;padding:0;min-height:0;box-shadow:none}
+#hd::after{content:"";display:block;width:44px;height:5px;border-radius:3px;background:var(--mut);margin:8px auto 0;opacity:.6}
+#sheet.min #sc,#sheet.min #tinfo,#sheet.min #stops,#sheet.min #heard{display:none}
+@media (max-height:520px){#sc,#tinfo,#stops,#heard{display:none}}
+.card.main{border-color:var(--mid);border-width:2px}#sw{margin:8px 0 0;min-height:36px;font-size:13px}
 </style></head><body>
 <div id="app">
 <canvas id="cv" aria-label="Rota haritası"></canvas>
 <div id="man" aria-live="polite"><div id="ico"></div><div><div id="dist">—</div><div id="txt">Hazır</div><div id="then"></div></div></div>
 <div id="alert" hidden role="status"></div>
 <div id="mb"><button id="rt" aria-label="Rotalar">Rotalar</button><button id="zi" aria-label="Yakınlaştır">+</button><button id="zo" aria-label="Uzaklaştır">−</button><button id="ov" aria-label="Genel görünüm" aria-pressed="false">Rota</button><button id="loc" aria-label="Konumum">◎</button><button id="lay" aria-label="Harita katmanı">Uydu</button><button id="trf" aria-label="Canlı trafik" aria-pressed="false">Trafik</button></div>
-<div id="pick" hidden><div class="ph"><span>Rotalar</span><button id="px" aria-label="Kapat">✕</button></div><input id="q" type="search" placeholder="Nereye gidiyorsun? (adres, yer)" autocomplete="off"><div id="res"></div><div id="alts"></div><h3>Kayıtlı rotalar</h3><div id="saved"></div></div>
+<div id="pick" hidden><div class="ph"><span>Rotalar</span><button id="px" aria-label="Kapat">✕</button></div><input id="q0" type="search" placeholder="Başlangıç: Konumum (değiştirmek için yaz)" autocomplete="off"><input id="q" type="search" placeholder="Varış: nereye gidiyorsun?" autocomplete="off"><button id="sw" aria-label="Başlangıç ve varışı değiştir">⇅ Yer değiştir</button><div id="res"></div><div id="alts"></div><h3>Kayıtlı rotalar</h3><div id="saved"></div></div>
 <section id="sheet">
+<button id="hd" aria-label="Paneli küçült/büyüt" aria-expanded="true"></button>
 <div id="stats"><div><b id="eta">--:--</b><span>varış</span></div><div><b id="rem">--</b><span>kalan süre</span></div><div><b id="km">--</b><span>kalan km</span></div><div><b id="spd">0</b><span>km/sa</span></div></div>
 <canvas id="sc"></canvas><div id="tinfo"><span id="tnow"></span><span id="tsrc">kayıttaki hıza göre trafik</span></div>
 <div id="stops"></div>
@@ -217,16 +225,16 @@ const play=()=>{if(st.live){navigator.geolocation.clearWatch(wid);st.live=false;
 locate();
 // rotalar
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),km=m=>(m/1000).toFixed(1).replace('.',',')+' km';
-let ROUTES=[{name:'Eklenmiş rota',d:D,b:1}],ALT=[],DEST=null,RES=[];const QC={},RC={};
+let ORIG=null,NA=false,AF=1;let ROUTES=[{name:'Ana rota',d:D,b:1}],ALT=[],DEST=null,RES=[];const QC={},RC={};
 try{JSON.parse(localStorage.getItem('rts')||'[]').forEach(r=>ROUTES.push(r))}catch(x){}
 const svR=()=>{try{localStorage.setItem('rts',JSON.stringify(ROUTES.filter(r=>!r.b)))}catch(x){alertMsg('Kaydedilemedi')}};
-function renderSaved(){$('saved').innerHTML=ROUTES.map((r,i)=>`<div class="card" data-i="${i}"><div><b>${esc(r.name)}</b><br><span>${km(r.d.L)} · ${fT(r.d.T)}</span></div>${r.b?'':`<button data-x="${i}" aria-label="Sil">✕</button>`}</div>`).join('')}
+function renderSaved(){$('saved').innerHTML=ROUTES.map((r,i)=>`<div class="card${r.b?' main':''}" data-i="${i}"><div><b>${esc(r.name)}</b><br><span>${km(r.d.L)} · ${fT(r.d.T)}</span></div>${r.b?'':`<button data-x="${i}" aria-label="Sil">✕</button>`}</div>`).join('')}
 const openPick=()=>{renderSaved();$('pick').hidden=false},closePick=()=>{$('pick').hidden=true};
 function join(a,b){const o=a.L;return{p:[...a.p.slice(0,-1),...b.p.map(q=>[q[0],q[1],q[2]+o,q[3]+a.T,q[4]])],t:[...a.t,...b.t.map(([d,n])=>[d+o,n])],s:b.s.map(x=>[x[0],x[1],x[2]+o,x[3]]),L:o+b.L,T:a.T+b.T,live:1,ts:Date.now(),stale:b.stale}}
-async function openRoute(d,name){if(st.live)play();closePick();
+async function openRoute(d,name,na){if(st.live)play();closePick();
  const fresh=d.live&&Date.now()-(d.ts||0)<6e5;let m=fresh?d:{...d,p:d.p.map(q=>[q[0],q[1],q[2],q[3],0]),live:0,stale:1},msg=name+' hazır · Başlat ile yönlendirmeyi başlatın';
  const A=d.p[0];
- if(st.ll){const dd=Math.hypot((st.ll[1]-A[1])*Math.cos(A[0]*Math.PI/180)*111320,(st.ll[0]-A[0])*110540);
+ if(na){}else if(st.ll){const dd=Math.hypot((st.ll[1]-A[1])*Math.cos(A[0]*Math.PI/180)*111320,(st.ll[0]-A[0])*110540);
   if(dd>300){alertMsg('Konumdan rota başlangıcına yol hesaplanıyor…',4000);
    try{const k='ap'+st.ll.map(v=>v.toFixed(3))+A[0].toFixed(4)+A[1].toFixed(4);let ap=RC[k];
     if(!ap){const R=await fetch(`https://api.tomtom.com/routing/1/calculateRoute/${st.ll[0].toFixed(5)},${st.ll[1].toFixed(5)}:${A[0]},${A[1]}/json?key=${tk}&traffic=true&maxAlternatives=0&instructionsType=coded&sectionType=traffic&language=tr-TR&routeType=fastest&travelMode=car`);if(!R.ok)throw 0;ap=RC[k]=conv((await R.json()).routes[0],{la:A[0],lo:A[1]})}
@@ -235,13 +243,16 @@ async function openRoute(d,name){if(st.live)play();closePick();
  setRoute(m);alertMsg(msg,7000)}
 $('rt').onclick=openPick;$('px').onclick=closePick;
 $('saved').onclick=e=>{const x=e.target.closest('[data-x]');if(x){ROUTES.splice(+x.dataset.x,1);svR();renderSaved();return}const c=e.target.closest('[data-i]');if(c){const r=ROUTES[+c.dataset.i];openRoute(r.d,r.name)}};
-let qt=0;$('q').oninput=()=>{clearTimeout(qt);const v=$('q').value.trim();if(v.length<3){$('res').innerHTML='';return}qt=setTimeout(()=>search(v),700)};
+let qt=0;
+const inp=(el,f)=>{el.onfocus=()=>AF=f;el.oninput=()=>{AF=f;clearTimeout(qt);const v=el.value.trim();if(f==0&&!v)ORIG=null;if(v.length<3){$('res').innerHTML='';return}qt=setTimeout(()=>search(v),700)}};inp($('q0'),0);inp($('q'),1);
+const me=()=>st.ll?{n:'Konumum',la:st.ll[0],lo:st.ll[1]}:null;
+$('sw').onclick=()=>{const t=ORIG||me(),d=DEST;if(!t){alertMsg('Konum alınamadı');return}ORIG=d;DEST=t;$('q0').value=ORIG?ORIG.n:'';$('q').value=DEST.n;if(ORIG&&DEST)plan(DEST)};
 async function search(v){const k=v.toLowerCase();let r=QC[k];
  if(!r){try{const ll=st.ll?`&lat=${st.ll[0].toFixed(3)}&lon=${st.ll[1].toFixed(3)}`:'',R=await fetch(`https://api.tomtom.com/search/2/search/${encodeURIComponent(v)}.json?key=${tk}&limit=5&language=tr-TR&countrySet=TR&typeahead=true${ll}`);
   if(!R.ok){alertMsg('Arama başarısız (anahtar/kota?)');return}
   r=QC[k]=((await R.json()).results||[]).map(x=>({n:x.poi?x.poi.name:x.address.freeformAddress,a:x.address.freeformAddress,la:x.position.lat,lo:x.position.lon}))}catch(e){alertMsg('Arama başarısız');return}}
  RES=r;$('res').innerHTML=r.map((x,i)=>`<div class="card" data-r="${i}"><div><b>${esc(x.n)}</b><br><span>${esc(x.a)}</span></div></div>`).join('')||'<div class="mut">Sonuç yok</div>'}
-$('res').onclick=e=>{const c=e.target.closest('[data-r]');if(c){const x=RES[+c.dataset.r];$('q').value=x.n;$('res').innerHTML='';plan(x)}};
+$('res').onclick=e=>{const c=e.target.closest('[data-r]');if(c){const x=RES[+c.dataset.r];$('res').innerHTML='';if(AF==0){ORIG=x;$('q0').value=x.n}else{DEST=x;$('q').value=x.n}if(DEST)plan(DEST)}};
 function conv(rt,x){const pts=rt.legs.flatMap(l=>l.points),lv=new Array(pts.length).fill(0);
  (rt.sections||[]).forEach(s=>{if(s.sectionType!='TRAFFIC')return;const m=s.magnitudeOfDelay,dl=s.delayInSeconds||0,l=(m>=4||(m==3&&dl>=120))?2:(m>=1&&dl>=45)?1:0;for(let i=s.startPointIndex;i<=s.endPointIndex;i++)lv[i]=Math.max(lv[i],l)});
  const p=[];let d=0,pr=null;
@@ -252,14 +263,17 @@ function conv(rt,x){const pts=rt.legs.flatMap(l=>l.points),lv=new Array(pts.leng
  const t=[];((rt.guidance&&rt.guidance.instructions)||[]).forEach(n=>{const a=n.turnAngleInDecimalDegrees,o=n.routeOffsetInMeters;
   if(typeof a!='number'||/DEPART|ARRIVE|WAYPOINT/.test(n.maneuver||''))return;if(Math.abs(a)>=25&&o>5&&o<Ld-10)t.push([o,Math.round(a)])});
  t.sort((a,b)=>a[0]-b[0]);return{p,t,s:[[x.la,x.lo,Ld,0]],L:Ld,T,live:1,ts:Date.now()}}
-async function plan(x){const o=st.ll||ROUTES[0].d.p[0].slice(0,2);if(!st.ll)alertMsg('Konum alınamadı, eklenmiş rotanın başlangıcı kullanıldı',5000);
+async function plan(x){const o=ORIG?[ORIG.la,ORIG.lo]:(st.ll||ROUTES[0].d.p[0].slice(0,2));if(!ORIG&&!st.ll)alertMsg('Konum alınamadı, eklenmiş rotanın başlangıcı kullanıldı',5000);
  const key=o.map(v=>v.toFixed(3))+'|'+x.la.toFixed(4)+','+x.lo.toFixed(4);let a=RC[key];
  if(!a){$('alts').innerHTML='<div class="mut">Rotalar hesaplanıyor…</div>';
   try{const R=await fetch(`https://api.tomtom.com/routing/1/calculateRoute/${o[0].toFixed(5)},${o[1].toFixed(5)}:${x.la},${x.lo}/json?key=${tk}&traffic=true&maxAlternatives=2&instructionsType=coded&sectionType=traffic&language=tr-TR&routeType=fastest&travelMode=car`);
    if(!R.ok)throw 0;a=RC[key]=(await R.json()).routes.map(rt=>({d:conv(rt,x),dl:rt.summary.trafficDelayInSeconds||0}))}catch(e){$('alts').innerHTML='<div class="mut">Rota hesaplanamadı</div>';return}}
- ALT=a;DEST=x;$('alts').innerHTML='<h3>Rota seçenekleri</h3>'+a.map((r,i)=>`<div class="card" data-a="${i}"><div><b>${i?'Alternatif '+i:'En hızlı'} · ${fT(r.d.T)}</b><br><span>${km(r.d.L)}${r.dl>=120?' · +'+Math.round(r.dl/60)+' dk trafik':' · trafik akıcı'}</span></div><button data-s="${i}">Kaydet</button></div>`).join('')}
-$('alts').onclick=e=>{const sv=e.target.closest('[data-s]');if(sv){const r=ALT[+sv.dataset.s];ROUTES.push({name:DEST.n,d:r.d});svR();renderSaved();sv.textContent='✓';return}const c=e.target.closest('[data-a]');if(c)openRoute(ALT[+c.dataset.a].d,DEST.n)};
+ ALT=a;DEST=x;NA=!!ORIG;$('alts').innerHTML='<h3>Rota seçenekleri</h3>'+a.map((r,i)=>`<div class="card" data-a="${i}"><div><b>${i?'Alternatif '+i:'En hızlı'} · ${fT(r.d.T)}</b><br><span>${km(r.d.L)}${r.dl>=120?' · +'+Math.round(r.dl/60)+' dk trafik':' · trafik akıcı'}</span></div><button data-s="${i}">Kaydet</button></div>`).join('')}
+$('alts').onclick=e=>{const sv=e.target.closest('[data-s]');if(sv){const r=ALT[+sv.dataset.s];ROUTES.push({name:DEST.n,d:r.d});svR();renderSaved();sv.textContent='✓';return}const c=e.target.closest('[data-a]');if(c)openRoute(ALT[+c.dataset.a].d,DEST.n,NA)};
 renderSaved();openPick();
+{const sh=$('sheet'),setSh=()=>document.documentElement.style.setProperty('--sh',sh.offsetHeight+8+'px');
+ if(window.ResizeObserver)new ResizeObserver(setSh).observe(sh);setSh();addEventListener('resize',setSh);
+ $('hd').onclick=()=>{sh.classList.toggle('min');$('hd').setAttribute('aria-expanded',!sh.classList.contains('min'));setSh()}}
 // sesli komut
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null;
 const nz=s=>s.toLocaleLowerCase('tr').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ı/g,'i');
